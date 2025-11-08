@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Неоновые Кристаллы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a16;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a2e, #0a0a16);
+            touch-action: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: neonGlow 3s ease infinite;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.7);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(10, 10, 30, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .stat {
+            font-size: 1.2rem;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            background: rgba(20, 20, 40, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .cell {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(30, 30, 60, 0.8);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .cell.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255, 0, 255, 0.5);
+            animation: pulse 1s infinite;
+            z-index: 10;
+        }
+
+        .cell.matched {
+            animation: disappear 0.5s ease forwards;
+        }
+
+        /* Crystal styles with neon effects */
+        .cell[data-type="1"] {
+            background: linear-gradient(135deg, #ff00ff, #cc00ff);
+            box-shadow: 0 0 10px #ff00ff, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid #ff66ff;
+        }
+
+        .cell[data-type="2"] {
+            background: linear-gradient(135deg, #00ffff, #00ccff);
+            box-shadow: 0 0 10px #00ffff, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid #66ffff;
+        }
+
+        .cell[data-type="3"] {
+            background: linear-gradient(135deg, #ffff00, #ffcc00);
+            box-shadow: 0 0 10px #ffff00, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid #ffff66;
+        }
+
+        .cell[data-type="4"] {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            box-shadow: 0 0 10px #00ff00, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid #66ff66;
+        }
+
+        .cell[data-type="5"] {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            box-shadow: 0 0 10px #ff0000, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 1px solid #ff6666;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            border: none;
+            color: #0a0a16;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.9);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            text-shadow: 0 0 20px currentColor;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .combo-x2 {
+            color: #00ffff;
+            animation: comboFloat 1.5s ease-out;
+        }
+
+        .combo-x3 {
+            color: #ff00ff;
+            animation: comboFloat 1.5s ease-out;
+        }
+
+        .combo-mega {
+            color: #ffff00;
+            animation: comboFloat 2s ease-out;
+        }
+
+        .combo-match {
+            color: #00ff00;
+            animation: comboFloat 2s ease-out;
+        }
+
+        /* Particle effects */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 50;
+            animation: particleFloat 1s ease-out forwards;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Animations */
+        @keyframes neonGlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255, 0, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px #ff00ff, 0 0 40px rgba(255, 0, 255, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255, 0, 255, 0.5);
+            }
+        }
+
+        @keyframes disappear {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+        }
+
+        @keyframes comboFloat {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -60%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -80%) scale(1.5);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 500px) {
+            .cell {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .stat {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="game-title">Неоновые Кристаллы</h1>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">Счет: <span id="score" class="stat-value">0</span></div>
+            <div class="stat">Ходы: <span id="moves" class="stat-value">15</span></div>
+            <div class="stat">Лучший: <span id="best-score" class="stat-value">0</span></div>
+        </div>
+        
+        <div class="game-board" id="game-board">
+            <!-- Игровое поле будет сгенерировано здесь -->
+        </div>
+        
+        <div class="controls">
+            <button id="restart-btn" class="btn">Новая игра</button>
+            <button id="hint-btn" class="btn">Подсказка</button>
+        </div>
+    </div>
+    
+    <div class="combo-display" id="combo-display"></div>
+
+    <script>
+        class NeonCrystalsGame {
+            constructor() {
+                this.boardSize = 8;
+                this.cellTypes = 5;
+                this.score = 0;
+                this.moves = 15;
+                this.selectedCells = [];
+                this.board = [];
+                this.isSwiping = false;
+                this.swipePath = [];
+                this.bestScore = localStorage.getItem('neonCrystalsBestScore') || 0;
+                
+                this.init();
+            }
+            
+            init() {
+                this.createBoard();
+                this.renderBoard();
+                this.setupEventListeners();
+                this.updateUI();
+            }
+            
+            createBoard() {
+                this.board = [];
+                for (let i = 0; i < this.boardSize; i++) {
+                    this.board[i] = [];
+                    for (let j = 0; j < this.boardSize; j++) {
+                        this.board[i][j] = this.getRandomType();
+                    }
+                }
+                
+                // Убедимся, что нет начальных совпадений
+                while (this.findMatches().length > 0) {
+                    this.createBoard();
+                }
+            }
+            
+            getRandomType() {
+                return Math.floor(Math.random() * this.cellTypes) + 1;
+            }
+            
+            renderBoard() {
+                const boardElement = document.getElementById('game-board');
+                boardElement.innerHTML = '';
+                
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.type = this.board[i][j];
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.textContent = this.getCrystalEmoji(this.board[i][j]);
+                        
+                        // Предотвращаем выделение текста и перетаскивание
+                        cell.addEventListener('mousedown', (e) => e.preventDefault());
+                        cell.addEventListener('dragstart', (e) => e.preventDefault());
+                        
+                        boardElement.appendChild(cell);
+                    }
+                }
+            }
+            
+            getCrystalEmoji(type) {
+                const crystals = ['', '💎', '🔷', '🔶', '💚', '❤️'];
+                return crystals[type];
+            }
+            
+            setupEventListeners() {
+                const boardElement = document.getElementById('game-board');
+                const restartBtn = document.getElementById('restart-btn');
+                const hintBtn = document.getElementById('hint-btn');
+                
+                // Предотвращаем контекстное меню
+                boardElement.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Touch events
+                boardElement.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleTouchStart(e);
+                });
+                
+                boardElement.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.handleTouchMove(e);
+                });
+                
+                boardElement.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleTouchEnd(e);
+                });
+                
+                // Mouse events
+                boardElement.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    this.handleMouseDown(e);
+                });
+                
+                boardElement.addEventListener('mousemove', (e) => {
+                    if (this.isSwiping) {
+                        e.preventDefault();
+                        this.handleMouseMove(e);
+                    }
+                });
+                
+                boardElement.addEventListener('mouseup', (e) => {
+                    if (this.isSwiping) {
+                        e.preventDefault();
+                        this.handleMouseUp(e);
+                    }
+                });
+                
+                boardElement.addEventListener('mouseleave', (e) => {
+                    if (this.isSwiping) {
+                        this.handleMouseLeave(e);
+                    }
+                });
+                
+                restartBtn.addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                hintBtn.addEventListener('click', () => {
+                    this.showHint();
+                });
+                
+                // Предотвращаем выделение при клике на кнопки
+                restartBtn.addEventListener('mousedown', (e) => e.preventDefault());
+                hintBtn.addEventListener('mousedown', (e) => e.preventDefault());
+            }
+            
+            getCellFromEvent(e) {
+                let clientX, clientY;
+                
+                if (e.type.includes('touch')) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                const element = document.elementFromPoint(clientX, clientY);
+                if (element && element.classList.contains('cell')) {
+                    return {
+                        element: element,
+                        row: parseInt(element.dataset.row),
+                        col: parseInt(element.dataset.col),
+                        type: parseInt(element.dataset.type)
+                    };
+                }
+                return null;
+            }
+            
+            handleTouchStart(e) {
+                if (this.moves <= 0) return;
+                
+                const cell = this.getCellFromEvent(e);
+                if (cell && cell.type !== 0) {
+                    this.startSwipe(cell);
+                }
+            }
+            
+            handleTouchMove(e) {
+                if (!this.isSwiping) return;
+                
+                const cell = this.getCellFromEvent(e);
+                if (cell) {
+                    this.continueSwipe(cell);
+                }
+            }
+            
+            handleTouchEnd(e) {
+                if (this.isSwiping) {
+                    this.endSwipe();
+                }
+            }
+            
+            handleMouseDown(e) {
+                if (this.moves <= 0) return;
+                
+                const cell = this.getCellFromEvent(e);
+                if (cell && cell.type !== 0) {
+                    this.startSwipe(cell);
+                }
+            }
+            
+            handleMouseMove(e) {
+                if (!this.isSwiping) return;
+                
+                const cell = this.getCellFromEvent(e);
+                if (cell) {
+                    this.continueSwipe(cell);
+                }
+            }
+            
+            handleMouseUp(e) {
+                if (this.isSwiping) {
+                    this.endSwipe();
+                }
+            }
+            
+            handleMouseLeave(e) {
+                if (this.isSwiping) {
+                    this.endSwipe();
+                }
+            }
+            
+            startSwipe(startCell) {
+                this.isSwiping = true;
+                this.selectedCells = [startCell];
+                this.swipePath = [startCell];
+                
+                this.highlightCell(startCell, true);
+            }
+            
+            continueSwipe(currentCell) {
+                const lastCell = this.selectedCells[this.selectedCells.length - 1];
+                
+                if (this.isNeighbor(lastCell, currentCell) &&
+                    currentCell.type === this.selectedCells[0].type &&
+                    !this.isCellSelected(currentCell)) {
+                    
+                    this.selectedCells.push(currentCell);
+                    this.swipePath.push(currentCell);
+                    this.highlightCell(currentCell, true);
+                }
+            }
+            
+            async endSwipe() {
+                this.isSwiping = false;
+                
+                if (this.selectedCells.length >= 3) {
+                    this.moves--;
+                    await this.processSwipeMatch();
+                    this.updateUI();
+                    
+                    if (this.moves <= 0) {
+                        setTimeout(() => {
+                            this.gameOver();
+                        }, 1000);
+                    }
+                }
+                
+                this.selectedCells.forEach(cell => {
+                    this.highlightCell(cell, false);
+                });
+                
+                this.selectedCells = [];
+                this.swipePath = [];
+            }
+            
+            isNeighbor(cell1, cell2) {
+                const rowDiff = Math.abs(cell1.row - cell2.row);
+                const colDiff = Math.abs(cell1.col - cell2.col);
+                return (rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0);
+            }
+            
+            isCellSelected(cell) {
+                return this.selectedCells.some(selected =>
+                    selected.row === cell.row && selected.col === cell.col
+                );
+            }
+            
+            highlightCell(cell, selected) {
+                if (cell.element) {
+                    cell.element.classList.toggle('selected', selected);
+                }
+            }
+            
+            async processSwipeMatch() {
+                const positions = this.selectedCells.map(cell => ({
+                    row: cell.row,
+                    col: cell.col
+                }));
+                
+                // Показываем текст комбо в зависимости от длины совпадения
+                this.showComboText(this.selectedCells.length);
+                
+                // Создаем эффекты частиц
+                this.createParticlesForSwipe(this.selectedCells);
+                
+                positions.forEach(pos => {
+                    this.board[pos.row][pos.col] = 0;
+                    const cell = document.querySelector(`.cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                    if (cell) {
+                        cell.classList.add('matched');
+                    }
+                });
+                
+                // Вычисляем очки с бонусом за длинные совпадения
+                const bonus = this.selectedCells.length - 2;
+                this.score += this.selectedCells.length * 10 * (1 + bonus * 0.5);
+                
+                await this.delay(400);
+                
+                this.applyGravity();
+                this.fillEmptyCells();
+                this.renderBoard();
+                
+                await this.delay(500);
+                
+                // Проверяем новые совпадения после обновления поля
+                const newMatches = this.findMatches();
+                if (newMatches.length > 0) {
+                    await this.processMatches(newMatches);
+                }
+            }
+            
+            showComboText(matchLength) {
+                const comboDisplay = document.getElementById('combo-display');
+                let text = '';
+                let className = '';
+                
+                if (matchLength === 3) {
+                    text = 'КОМБО! x2';
+                    className = 'combo-x2';
+                } else if (matchLength === 4) {
+                    text = 'КОМБО! x3';
+                    className = 'combo-x3';
+                } else if (matchLength === 5) {
+                    text = 'МЕГА!';
+                    className = 'combo-mega';
+                } else if (matchLength >= 6) {
+                    text = 'СОВПАДЕНИЕ!';
+                    className = 'combo-match';
+                }
+                
+                if (text) {
+                    comboDisplay.textContent = text;
+                    comboDisplay.className = `combo-display ${className}`;
+                    
+                    // Сбрасываем анимацию
+                    comboDisplay.style.animation = 'none';
+                    setTimeout(() => {
+                        comboDisplay.style.animation = '';
+                    }, 10);
+                }
+            }
+            
+            createParticlesForSwipe(cells) {
+                cells.forEach(cell => {
+                    this.spawnParticles(cell.element);
+                });
+            }
+            
+            spawnParticles(cellElement) {
+                const rect = cellElement.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    // Устанавливаем цвет частицы в зависимости от типа кристалла
+                    const type = cellElement.dataset.type;
+                    const colors = ['', '#ff00ff', '#00ffff', '#ffff00', '#00ff00', '#ff0000'];
+                    particle.style.background = colors[type];
+                    particle.style.boxShadow = `0 0 10px ${colors[type]}`;
+                    
+                    const angle = (i / 15) * Math.PI * 2;
+                    const distance = 50 + Math.random() * 100;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    
+                    particle.style.left = `${centerX}px`;
+                    particle.style.top = `${centerY}px`;
+                    
+                    document.body.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 1000);
+                }
+            }
+            
+            findMatches() {
+                const matches = [];
+                
+                // Проверяем горизонтальные совпадения
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize - 2; j++) {
+                        if (this.board[i][j] !== 0 &&
+                            this.board[i][j] === this.board[i][j + 1] &&
+                            this.board[i][j] === this.board[i][j + 2]) {
+                            matches.push({ row: i, col: j, direction: 'horizontal', length: 3 });
+                        }
+                    }
+                }
+                
+                // Проверяем вертикальные совпадения
+                for (let i = 0; i < this.boardSize - 2; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        if (this.board[i][j] !== 0 &&
+                            this.board[i][j] === this.board[i + 1][j] &&
+                            this.board[i][j] === this.board[i + 2][j]) {
+                            matches.push({ row: i, col: j, direction: 'vertical', length: 3 });
+                        }
+                    }
+                }
+                
+                return matches;
+            }
+            
+            findPossibleMoves() {
+                const moves = [];
+                
+                // Проверяем все возможные свайпы
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        // Проверяем соседние ячейки
+                        const directions = [
+                            {row: i-1, col: j}, // вверх
+                            {row: i+1, col: j}, // вниз
+                            {row: i, col: j-1}, // влево
+                            {row: i, col: j+1}  // вправо
+                        ];
+                        
+                        for (const dir of directions) {
+                            if (dir.row >= 0 && dir.row < this.boardSize && 
+                                dir.col >= 0 && dir.col < this.boardSize) {
+                                
+                                // Временно меняем местами
+                                const temp = this.board[i][j];
+                                this.board[i][j] = this.board[dir.row][dir.col];
+                                this.board[dir.row][dir.col] = temp;
+                                
+                                // Проверяем, создает ли это совпадение
+                                if (this.findMatches().length > 0) {
+                                    moves.push({
+                                        start: {row: i, col: j},
+                                        end: {row: dir.row, col: dir.col}
+                                    });
+                                }
+                                
+                                // Возвращаем обратно
+                                this.board[dir.row][dir.col] = this.board[i][j];
+                                this.board[i][j] = temp;
+                            }
+                        }
+                    }
+                }
+                
+                return moves;
+            }
+            
+            showHint() {
+                const possibleMoves = this.findPossibleMoves();
+                
+                if (possibleMoves.length > 0) {
+                    const move = possibleMoves[0];
+                    const startCell = document.querySelector(`.cell[data-row="${move.start.row}"][data-col="${move.start.col}"]`);
+                    const endCell = document.querySelector(`.cell[data-row="${move.end.row}"][data-col="${move.end.col}"]`);
+                    
+                    if (startCell && endCell) {
+                        // Подсвечиваем обе ячейки
+                        startCell.classList.add('selected');
+                        endCell.classList.add('selected');
+                        
+                        // Убираем подсветку через 1.5 секунды
+                        setTimeout(() => {
+                            startCell.classList.remove('selected');
+                            endCell.classList.remove('selected');
+                        }, 1500);
+                    }
+                } else {
+                    alert('Нет возможных ходов! Начните новую игру.');
+                }
+            }
+            
+            async processMatches(matches) {
+                // Создаем эффекты частиц для совпадений
+                this.createParticlesForMatches(matches);
+                
+                matches.forEach(match => {
+                    if (match.direction === 'horizontal') {
+                        for (let k = 0; k < match.length; k++) {
+                            const cell = document.querySelector(`.cell[data-row="${match.row}"][data-col="${match.col + k}"]`);
+                            if (cell) {
+                                cell.classList.add('matched');
+                            }
+                            this.board[match.row][match.col + k] = 0;
+                        }
+                    } else {
+                        for (let k = 0; k < match.length; k++) {
+                            const cell = document.querySelector(`.cell[data-row="${match.row + k}"][data-col="${match.col}"]`);
+                            if (cell) {
+                                cell.classList.add('matched');
+                            }
+                            this.board[match.row + k][match.col] = 0;
+                        }
+                    }
+                });
+                
+                await this.delay(400);
+                
+                this.applyGravity();
+                this.fillEmptyCells();
+                this.renderBoard();
+                
+                await this.delay(500);
+                
+                const newMatches = this.findMatches();
+                if (newMatches.length > 0) {
+                    await this.processMatches(newMatches);
+                }
+            }
+            
+            createParticlesForMatches(matches) {
+                matches.forEach(match => {
+                    const positions = [];
+                    
+                    if (match.direction === 'horizontal') {
+                        for (let k = 0; k < match.length; k++) {
+                            positions.push({ row: match.row, col: match.col + k });
+                        }
+                    } else {
+                        for (let k = 0; k < match.length; k++) {
+                            positions.push({ row: match.row + k, col: match.col });
+                        }
+                    }
+                    
+                    positions.forEach(pos => {
+                        const cell = document.querySelector(`.cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                        if (cell) {
+                            this.spawnParticles(cell);
+                        }
+                    });
+                });
+            }
+            
+            applyGravity() {
+                for (let j = 0; j < this.boardSize; j++) {
+                    for (let i = this.boardSize - 1; i >= 0; i--) {
+                        if (this.board[i][j] === 0) {
+                            for (let k = i - 1; k >= 0; k--) {
+                                if (this.board[k][j] !== 0) {
+                                    this.board[i][j] = this.board[k][j];
+                                    this.board[k][j] = 0;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            fillEmptyCells() {
+                for (let i = 0; i < this.boardSize; i++) {
+                    for (let j = 0; j < this.boardSize; j++) {
+                        if (this.board[i][j] === 0) {
+                            this.board[i][j] = this.getRandomType();
+                        }
+                    }
+                }
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = Math.floor(this.score);
+                document.getElementById('moves').textContent = this.moves;
+                document.getElementById('best-score').textContent = this.bestScore;
+            }
+            
+            gameOver() {
+                // Обновляем лучший счет если нужно
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('neonCrystalsBestScore', this.bestScore);
+                }
+                
+                alert(`Игра окончена! Ваш счет: ${Math.floor(this.score)}\nЛучший счет: ${this.bestScore}`);
+                this.restartGame();
+            }
+            
+            restartGame() {
+                this.score = 0;
+                this.moves = 15;
+                this.selectedCells = [];
+                this.isSwiping = false;
+                this.swipePath = [];
+                this.createBoard();
+                this.renderBoard();
+                this.updateUI();
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Инициализируем игру при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            new NeonCrystalsGame();
+        });
+    </script>
+</body>
+</html>
